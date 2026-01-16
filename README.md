@@ -11,6 +11,7 @@ A framework-agnostic TypeScript SDK for integrating with the Sudapass Identity P
 - [API Reference](#api-reference)
 - [Framework Examples](#framework-examples)
   - [Next.js App Router](#nextjs-app-router)
+  - [NextAuth.js Integration](#nextauthjs-integration)
   - [React SPA](#react-spa)
   - [Vue 3](#vue-3)
   - [Node.js Express](#nodejs-express)
@@ -508,6 +509,218 @@ export async function POST() {
     cookieStore.delete("refresh_token");
     cookieStore.delete("user");
     return NextResponse.json({ error: "Refresh failed" }, { status: 401 });
+  }
+}
+```
+
+---
+
+### NextAuth.js Integration
+
+You can use `sudapass-ts-sdk` with NextAuth.js by creating a custom provider.
+
+#### Install NextAuth
+
+```bash
+npm install next-auth
+```
+
+#### Create Sudapass Provider (`lib/sudapass-provider.ts`)
+
+```typescript
+import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
+import type { SudapassProfile } from "sudapass-ts-sdk";
+
+export interface SudapassProviderConfig extends OAuthUserConfig<SudapassProfile> {
+  baseUrl: string;
+}
+
+export function SudapassProvider(config: SudapassProviderConfig): OAuthConfig<SudapassProfile> {
+  const baseUrl = config.baseUrl.replace(/\/$/, "");
+
+  return {
+    id: "sudapass",
+    name: "Sudapass",
+    type: "oauth",
+    checks: ["pkce", "state"],
+    authorization: {
+      url: `${baseUrl}/oauth/authorize`,
+      params: {
+        scope: "openid profile email",
+        response_type: "code",
+      },
+    },
+    token: `${baseUrl}/oauth/token`,
+    userinfo: `${baseUrl}/oauth/userinfo`,
+    client: {
+      token_endpoint_auth_method: "none",
+    },
+    profile(profile) {
+      return {
+        id: profile.sub,
+        name: profile.name,
+        email: profile.email,
+        image: null,
+        nationalId: profile.national_id,
+        birthdate: profile.birthdate,
+        gender: profile.gender,
+      };
+    },
+    clientId: config.clientId,
+    clientSecret: "",
+  };
+}
+```
+
+#### Configure NextAuth (`app/api/auth/[...nextauth]/route.ts`)
+
+```typescript
+import NextAuth from "next-auth";
+import { SudapassProvider } from "@/lib/sudapass-provider";
+
+const handler = NextAuth({
+  providers: [
+    SudapassProvider({
+      baseUrl: process.env.SUDAPASS_BASE_URL!,
+      clientId: process.env.SUDAPASS_CLIENT_ID!,
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, account, profile }) {
+      if (account) {
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+        token.expiresAt = account.expires_at;
+      }
+      if (profile) {
+        token.nationalId = (profile as any).national_id;
+        token.birthdate = (profile as any).birthdate;
+        token.gender = (profile as any).gender;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      session.accessToken = token.accessToken as string;
+      session.user.nationalId = token.nationalId as string;
+      session.user.birthdate = token.birthdate as string;
+      session.user.gender = token.gender as string;
+      return session;
+    },
+  },
+});
+
+export { handler as GET, handler as POST };
+```
+
+#### Extend NextAuth Types (`types/next-auth.d.ts`)
+
+```typescript
+import "next-auth";
+
+declare module "next-auth" {
+  interface Session {
+    accessToken?: string;
+    user: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      nationalId?: string;
+      birthdate?: string;
+      gender?: string;
+    };
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    accessToken?: string;
+    refreshToken?: string;
+    expiresAt?: number;
+    nationalId?: string;
+    birthdate?: string;
+    gender?: string;
+  }
+}
+```
+
+#### Environment Variables
+
+```env
+SUDAPASS_BASE_URL=https://api.sp.nctr.sd
+SUDAPASS_CLIENT_ID=your-client-id
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-random-secret-key
+```
+
+#### Usage in Components
+
+```typescript
+"use client";
+import { signIn, signOut, useSession } from "next-auth/react";
+
+export function LoginButton() {
+  const { data: session } = useSession();
+
+  if (session) {
+    return (
+      <div>
+        <p>Welcome, {session.user.name}</p>
+        <p>National ID: {session.user.nationalId}</p>
+        <button onClick={() => signOut()}>Logout</button>
+      </div>
+    );
+  }
+
+  return <button onClick={() => signIn("sudapass")}>Login with Sudapass</button>;
+}
+```
+
+#### Token Refresh with NextAuth
+
+To handle token rotation, update the JWT callback:
+
+```typescript
+async jwt({ token, account }) {
+  // Initial sign in
+  if (account) {
+    return {
+      ...token,
+      accessToken: account.access_token,
+      refreshToken: account.refresh_token,
+      expiresAt: account.expires_at,
+    };
+  }
+
+  // Return token if not expired
+  if (Date.now() < (token.expiresAt as number) * 1000) {
+    return token;
+  }
+
+  // Refresh token
+  try {
+    const response = await fetch(`${process.env.SUDAPASS_BASE_URL}/oauth/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: token.refreshToken as string,
+        client_id: process.env.SUDAPASS_CLIENT_ID!,
+      }),
+    });
+
+    const tokens = await response.json();
+
+    if (!response.ok) throw tokens;
+
+    return {
+      ...token,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token, // Token rotation!
+      expiresAt: Math.floor(Date.now() / 1000) + tokens.expires_in,
+    };
+  } catch {
+    return { ...token, error: "RefreshTokenError" };
   }
 }
 ```
