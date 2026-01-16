@@ -1,5 +1,5 @@
 {
-  "name": "@sudapass/ts-sdk",
+  "name": "sudapass-ts-sdk",
   "version": "1.0.0",
   "description": "OIDC client for Sudapass Identity Provider with PKCE support",
   "author": "NCTR",

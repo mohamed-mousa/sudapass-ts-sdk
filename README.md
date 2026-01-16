@@ -1,4 +1,4 @@
-# @sudapass/ts-sdk
+# sudapass-ts-sdk
 
 A framework-agnostic TypeScript SDK for integrating with the Sudapass Identity Provider using OpenID Connect (OIDC) Authorization Code flow with PKCE.
 
@@ -33,21 +33,21 @@ A framework-agnostic TypeScript SDK for integrating with the Sudapass Identity P
 ## Installation
 
 ```bash
-npm install @sudapass/ts-sdk
+npm install sudapass-ts-sdk
 ```
 
 ```bash
-yarn add @sudapass/ts-sdk
+yarn add sudapass-ts-sdk
 ```
 
 ```bash
-pnpm add @sudapass/ts-sdk
+pnpm add sudapass-ts-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { SudapassClient } from "@sudapass/ts-sdk";
+import { SudapassClient } from "sudapass-ts-sdk";
 
 // 1. Initialize the client
 const client = new SudapassClient({
@@ -292,7 +292,7 @@ interface SudapassProfile {
 #### SudapassError
 
 ```typescript
-import { SudapassError } from "@sudapass/ts-sdk";
+import { SudapassError } from "sudapass-ts-sdk";
 
 class SudapassError extends Error {
   error: string;           // OAuth error code
@@ -314,7 +314,7 @@ import {
   generatePKCE,     // Generate code verifier and challenge
   generateState,    // Generate random state parameter
   generateNonce,    // Generate random nonce
-} from "@sudapass/ts-sdk";
+} from "sudapass-ts-sdk";
 ```
 
 ## Framework Examples
@@ -332,7 +332,7 @@ SUDAPASS_REDIRECT_URI=https://yourapp.com/auth/callback
 #### Shared Client (`lib/sudapass.ts`)
 
 ```typescript
-import { SudapassClient } from "@sudapass/ts-sdk";
+import { SudapassClient } from "sudapass-ts-sdk";
 
 export const sudapass = new SudapassClient({
   baseUrl: process.env.SUDAPASS_BASE_URL!,
@@ -520,7 +520,7 @@ export async function POST() {
 
 ```typescript
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { SudapassClient, SudapassProfile, TokenResponse } from "@sudapass/ts-sdk";
+import { SudapassClient, SudapassProfile, TokenResponse } from "sudapass-ts-sdk";
 
 interface AuthContextType {
   user: SudapassProfile | null;
@@ -649,7 +649,7 @@ export function CallbackPage() {
 
 ```typescript
 import { ref, computed } from "vue";
-import { SudapassClient, type SudapassProfile } from "@sudapass/ts-sdk";
+import { SudapassClient, type SudapassProfile } from "sudapass-ts-sdk";
 
 const client = new SudapassClient({
   baseUrl: import.meta.env.VITE_SUDAPASS_BASE_URL,
@@ -720,7 +720,7 @@ export function useAuth() {
 ```typescript
 import express from "express";
 import session from "express-session";
-import { SudapassClient } from "@sudapass/ts-sdk";
+import { SudapassClient } from "sudapass-ts-sdk";
 
 const app = express();
 
@@ -835,7 +835,7 @@ savedRefreshToken = tokens.refresh_token; // Update immediately!
 The SDK throws `SudapassError` for OAuth-related errors:
 
 ```typescript
-import { SudapassClient, SudapassError } from "@sudapass/ts-sdk";
+import { SudapassClient, SudapassError } from "sudapass-ts-sdk";
 
 try {
   const { tokens } = await client.handleCallback(code, verifier);
