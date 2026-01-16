@@ -1,0 +1,48 @@
+{
+  "name": "@sudapass/ts-sdk",
+  "version": "1.0.0",
+  "description": "OIDC client for Sudapass Identity Provider with PKCE support",
+  "author": "NCTR",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.9",
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.3"
+  },
+  "keywords": [
+    "sudapass",
+    "oidc",
+    "openid-connect",
+    "pkce",
+    "oauth2",
+    "authentication",
+    "identity",
+    "sudan"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nctr-sd/sudapass-oidc-client"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
