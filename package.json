@@ -40,7 +40,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/nctr-sd/sudapass-oidc-client"
+    "url": "git+https://github.com/mohamed-mousa/sudapass-ts-sdk.git"
+  },
+  "homepage": "https://github.com/mohamed-mousa/sudapass-ts-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/mohamed-mousa/sudapass-ts-sdk/issues"
   },
   "engines": {
     "node": ">=18.0.0"
