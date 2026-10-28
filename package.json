@@ -1,6 +1,6 @@
 {
   "name": "sudapass-ts-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "OIDC client for Sudapass Identity Provider with PKCE support",
   "author": "NCTR",
   "license": "MIT",
